@@ -15,8 +15,8 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// INICIALIZA O EMAILJS (Você precisa criar conta gratuita no emailjs.com)
-// Substitua "SUA_PUBLIC_KEY" pela chave que o EmailJS te der
+// INICIALIZA O EMAILJS 
+// (Lembre-se de colocar sua PUBLIC KEY real aqui em baixo)
 (function(){
     emailjs.init("SUA_PUBLIC_KEY_AQUI"); 
 })();
@@ -27,12 +27,12 @@ const formatarMoeda = (valor) => {
     return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-// [NOVO] Algoritmo oficial de validação de CPF (Receita Federal)
+// Algoritmo oficial de validação de CPF (Receita Federal)
 function validarCPF(cpf) {
     cpf = cpf.replace(/[^\d]+/g,''); // Remove pontos e traços
     if(cpf == '') return false;
     
-    // Elimina CPFs inválidos conhecidos (111.111.111-11, etc)
+    // Elimina CPFs inválidos conhecidos
     if (cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
     
     // Valida 1º dígito verificador
@@ -61,6 +61,7 @@ function toggleAuth(tipo) {
     const msgErro = document.getElementById('msgErroAuth');
 
     msgErro.classList.add('hidden');
+    msgErro.innerHTML = ""; // Limpa texto de erro ao trocar de aba
 
     if (tipo === 'login') {
         loginForm.classList.remove('hidden');
@@ -99,33 +100,60 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
+// [ATUALIZADO] LOGIN COM MENSAGENS EM PORTUGUÊS
 function fazerLogin() {
     const email = document.getElementById('loginEmail').value;
     const senha = document.getElementById('loginSenha').value;
     const msgErro = document.getElementById('msgErroAuth');
 
+    // Limpa erro anterior
+    msgErro.classList.add('hidden');
+    msgErro.innerHTML = "";
+
     if(!email || !senha) {
-        msgErro.innerHTML = "Preencha e-mail e senha!";
+        msgErro.innerHTML = "Preencha e-mail e senha, vivente!";
         msgErro.classList.remove('hidden');
         return;
     }
 
     auth.signInWithEmailAndPassword(email, senha)
         .catch((error) => {
-            msgErro.innerHTML = "Erro ao entrar: " + error.message;
+            console.error("Erro original:", error.code); // Para você ver no console se precisar
+
+            // TRADUÇÃO DOS ERROS
+            if (error.code === 'auth/wrong-password') {
+                msgErro.innerHTML = "Senha incorreta! Tente novamente.";
+            } 
+            else if (error.code === 'auth/user-not-found') {
+                msgErro.innerHTML = "E-mail não encontrado. Você já fez o cadastro?";
+            } 
+            else if (error.code === 'auth/invalid-email') {
+                msgErro.innerHTML = "Esse e-mail não é válido. Verifique se digitou certo.";
+            } 
+            else if (error.code === 'auth/too-many-requests') {
+                msgErro.innerHTML = "Muitas tentativas seguidas. Aguarde um pouco e tente de novo.";
+            } 
+            else if (error.code === 'auth/network-request-failed') {
+                msgErro.innerHTML = "Sem conexão com a internet.";
+            }
+            else {
+                msgErro.innerHTML = "Erro ao entrar. Tente novamente.";
+            }
+            
             msgErro.classList.remove('hidden');
         });
 }
 
-// [NOVO] Função de Recuperar Senha
+// Função de Recuperar Senha (Também traduzida)
 function recuperarSenha() {
     const email = document.getElementById('loginEmail').value;
     const msgErro = document.getElementById('msgErroAuth');
 
+    msgErro.classList.add('hidden');
+
     if(!email) {
         msgErro.innerHTML = "Digite seu e-mail no campo acima e clique aqui novamente.";
         msgErro.classList.remove('hidden');
-        // Foca no campo de e-mail para ajudar o usuário
         document.getElementById('loginEmail').focus();
         return;
     }
@@ -134,20 +162,22 @@ function recuperarSenha() {
         auth.sendPasswordResetEmail(email)
         .then(() => {
             alert("E-mail enviado! Verifique sua caixa de entrada (e spam) para criar uma nova senha.");
-            msgErro.classList.add('hidden');
         })
         .catch((error) => {
             console.error(error);
             if (error.code === 'auth/user-not-found') {
-                msgErro.innerHTML = "E-mail não cadastrado.";
+                msgErro.innerHTML = "Esse e-mail não possui cadastro no sistema.";
+            } else if (error.code === 'auth/invalid-email') {
+                msgErro.innerHTML = "Formato de e-mail inválido.";
             } else {
-                msgErro.innerHTML = "Erro ao enviar: " + error.message;
+                msgErro.innerHTML = "Erro ao enviar e-mail de recuperação.";
             }
             msgErro.classList.remove('hidden');
         });
     }
 }
 
+// [ATUALIZADO] CADASTRO COM MENSAGENS EM PORTUGUÊS
 function fazerCadastro() {
     const nome = document.getElementById('cadNome').value;
     const cpfCru = document.getElementById('cadCpf').value;
@@ -157,16 +187,20 @@ function fazerCadastro() {
     const senha = document.getElementById('cadSenha').value;
     const msgErro = document.getElementById('msgErroAuth');
 
+    msgErro.classList.add('hidden');
+    msgErro.innerHTML = "";
+
     if(!email || !senha || !cpf || !nome) {
         msgErro.innerHTML = "Preencha todos os campos!";
         msgErro.classList.remove('hidden');
         return;
     }
 
-    // [NOVO] Validação de CPF antes de criar a conta
+    // Validação de CPF antes de criar a conta
     if(!validarCPF(cpf)) {
-        msgErro.innerHTML = "CPF Inválido! Confira os números.";
+        msgErro.innerHTML = "CPF Inválido! Confira os números digitados.";
         msgErro.classList.remove('hidden');
+        document.getElementById('cadCpf').focus();
         return;
     }
 
@@ -184,13 +218,17 @@ function fazerCadastro() {
     })
     .then(() => {
         alert("Conta criada com sucesso! Bem-vindo.");
+        // O onAuthStateChanged vai lidar com o redirecionamento
     })
     .catch((error) => {
         console.error(error);
+        // Tradução de erros no Cadastro
         if(error.code === 'auth/email-already-in-use') {
-            msgErro.innerHTML = "Este e-mail já está em uso.";
+            msgErro.innerHTML = "Este e-mail já possui conta. Tente fazer Login.";
         } else if (error.code === 'auth/weak-password') {
             msgErro.innerHTML = "A senha deve ter pelo menos 6 caracteres.";
+        } else if (error.code === 'auth/invalid-email') {
+            msgErro.innerHTML = "E-mail inválido.";
         } else {
             msgErro.innerHTML = "Erro ao cadastrar: " + error.message;
         }
