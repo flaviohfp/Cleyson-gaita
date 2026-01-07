@@ -60,17 +60,26 @@ function buscarDivida() {
                 let valorNumerico = parseFloat(data.valor);
                 total += valorNumerico;
 
-                // --- NOVA PARTE: Verifica se tem justificativa/observação ---
+                // --- PREPARA A OBSERVAÇÃO ---
+                // Se tiver observação, cria a div com ícone. Se não, fica vazio.
                 const obsHtml = data.observacao 
-                    ? `<div class="detalhe-servico"><i class="fa-solid fa-circle-info"></i> ${data.observacao}</div>` 
+                    ? `<div class="detalhe-servico">
+                         <i class="fa-solid fa-circle-info"></i> ${data.observacao}
+                       </div>` 
                     : '';
 
+                // --- MONTA O CARD ---
                 html += `
                     <div class="result-item">
-                        <div style="font-size: 0.8rem; color: #d4af37;">${data.rodeio}</div>
+                        <div style="font-size: 0.8rem; color: #d4af37; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                            ${data.rodeio}
+                        </div>
                         
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span>${data.nome} <small style="color:#666">(${data.categoria || '-'})</small></span>
+                            <span style="font-size: 1.1rem; font-weight: bold;">
+                                ${data.nome} 
+                                <small style="color:#888; font-weight: normal; font-size: 0.9rem;">(${data.categoria || '-'})</small>
+                            </span>
                             <span class="total-value">${formatarMoeda(valorNumerico)}</span>
                         </div>
 
@@ -79,9 +88,10 @@ function buscarDivida() {
                 `;
             });
             
-            html += `<div style="margin-top:15px; padding-top:10px; border-top: 1px dashed #444; text-align:right;">
-                        <small>TOTAL A PAGAR:</small><br>
-                        <span style="color: white; font-size: 1.5rem;">${formatarMoeda(total)}</span>
+            // --- TOTAL FINAL ---
+            html += `<div style="margin-top:20px; padding-top:15px; border-top: 1px dashed #444; text-align:right;">
+                        <small style="color: #aaa; letter-spacing: 1px;">TOTAL A PAGAR:</small><br>
+                        <span style="color: white; font-size: 1.8rem; font-weight: bold;">${formatarMoeda(total)}</span>
                      </div>`;
 
             resDiv.innerHTML = html;

@@ -114,7 +114,7 @@ body {
 }
 
 /* Input com tamanho de fonte 16px evita zoom automático no iPhone */
-input, select {
+input, select, textarea {
     width: 100%;
     background-color: var(--input-bg);
     border: 1px solid #333;
@@ -124,32 +124,13 @@ input, select {
     font-size: 1rem; 
     outline: none;
     transition: 0.3s;
-    
-}
-
-
-/* Estilo para a descrição do serviço (Gaiteiros/Violeiros) */
-.detalhe-servico {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px dashed #444; /* Linha pontilhada separando */
-    font-size: 0.9rem;
-    color: #bbb; /* Cor um pouco mais clara que o texto normal */
-    font-style: italic;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.detalhe-servico i {
-    color: var(--gold); /* Ícone dourado */
-    font-size: 0.8rem;
+    font-family: inherit;
 }
 
 /* Ajuste específico para quando tem ícone */
 .input-group input { padding-left: 45px; }
 
-input:focus, select:focus {
+input:focus, select:focus, textarea:focus {
     border-color: var(--gold);
     box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
 }
@@ -188,6 +169,42 @@ button {
     animation: fadeIn 0.5s ease;
 }
 
+/* Item individual da lista de resultados */
+.result-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #333;
+}
+.result-item:last-child {
+    border-bottom: none;
+}
+
+.total-value {
+    color: var(--text-white);
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+/* --- NOVO: Estilo para a descrição do serviço (Gaiteiros/Violeiros) --- */
+.detalhe-servico {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #444; /* Linha pontilhada separando */
+    font-size: 0.85rem;
+    color: #bbb; /* Cor cinza claro */
+    font-style: italic;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.detalhe-servico i {
+    color: var(--gold); /* Ícone dourado */
+    font-size: 0.8rem;
+    margin-top: 3px; /* Alinha o ícone visualmente */
+}
+
+/* --- 7. SPINNER E UTILITÁRIOS --- */
 .spinner {
     border: 3px solid rgba(255,255,255,0.1);
     border-radius: 50%;
@@ -202,7 +219,7 @@ button {
 .hidden { display: none !important; }
 .error-msg { color: #ff6b6b; text-align: center; margin-top: 15px; background: rgba(255,107,107,0.1); padding: 10px; border-radius: 8px; }
 
-/* --- 7. RODAPÉ E LINK ADMIN --- */
+/* --- 8. RODAPÉ E LINK ADMIN --- */
 .footer-area {
     margin-top: 40px;
     text-align: center;
@@ -217,10 +234,12 @@ button {
     cursor: pointer;
     padding: 8px 12px;
     transition: 0.3s;
+    text-decoration: none;
+    color: #444;
 }
 .admin-link:hover { color: var(--gold); }
 
-/* --- 8. MODAL DO ADMIN (Crucial para o Tablet) --- */
+/* --- 9. MODAL DO ADMIN (Mantido para não quebrar o painel) --- */
 .modal-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -250,7 +269,6 @@ button {
 }
 
 /* Área de Rolagem do Formulário */
-/* Se o conteúdo for maior que a tela (teclado aberto), ele rola */
 .scrollable-form {
     overflow-y: auto; 
     padding-right: 5px; /* Espaço para a barra de rolagem */
@@ -267,7 +285,7 @@ button {
     margin: 0;
 }
 
-/* Títulos e Labels do Admin */
+/* Títulos e Labels do Admin dentro do Modal */
 .admin-title { text-align: center; color: var(--gold); letter-spacing: 2px; margin: 5px 0 20px 0; }
 .label-gold { color: var(--gold); font-size: 0.8rem; text-transform: uppercase; font-weight: bold; margin: 15px 0 5px 0; display: block; }
 .divider { border: 0; border-top: 1px solid #333; margin: 20px 0; }
@@ -281,7 +299,7 @@ button {
 }
 .row-2 input { flex: 1; }
 
-/* --- 9. AJUSTES PARA TABLET E CELULAR PEQUENO --- */
+/* --- 10. AJUSTES PARA TABLET E CELULAR PEQUENO --- */
 
 /* Celulares muito pequenos */
 @media (max-width: 360px) {
