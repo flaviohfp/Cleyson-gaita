@@ -124,7 +124,7 @@ input, select {
     font-size: 1rem; 
     outline: none;
     transition: 0.3s;
-    -webkit-appearance: none; /* Remove estilo padrão iOS */
+    
 }
 
 /* Ajuste específico para quando tem ícone */
