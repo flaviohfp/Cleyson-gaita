@@ -3,84 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Gaiteiro</title>
-    <link rel="stylesheet" href="./assets/css/admin.css">
+    <title>Painel Admin - Gaiteiro</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        .item-lista-admin { transition: 0.2s; }
+        .item-lista-admin:hover { background-color: #252525 !important; }
+        .nav-tabs { display: flex; border-bottom: 1px solid #333; margin-bottom: 20px; }
+        .nav-tab { flex: 1; padding: 15px; text-align: center; background: transparent; color: #666; border: none; cursor: pointer; border-bottom: 2px solid transparent; }
+        .nav-tab.active { color: var(--gold); border-bottom: 2px solid var(--gold); font-weight: bold; }
+    </style>
 </head>
 <body>
 
-    <div class="admin-wrapper">
-        
-        <div class="header-admin">
-            <img src="./assets/img/logo-cleyson.jpeg" class="logo-mini" alt="Logo">
-            <h2 class="admin-title">Painel Administrativo</h2>
+    <div id="telaLogin" class="app-wrapper">
+        <div class="logo-area">
+            <div class="logo-container">
+                <img src="./assets/img/logo-cleyson.jpeg" alt="Logo">
+            </div>
         </div>
-
-        <div id="telaLogin" class="login-card">
-            <p>Informe a senha do Gaiteiro:</p>
-            <input type="password" id="senhaAdmin" placeholder="Senha" style="text-align:center;">
+        <div class="main-card">
+            <h2 class="admin-title">ÁREA RESTRITA</h2>
+            <div class="input-group">
+                <i class="fa-solid fa-lock input-icon"></i>
+                <input type="password" id="senhaAdmin" placeholder="Senha do Admin">
+            </div>
             <button onclick="verificarSenha()" class="btn-gold">ENTRAR</button>
-            <a href="index.html" class="btn-back">Voltar para o site</a>
+            <div style="text-align:center; margin-top:20px;">
+                <a href="index.html" class="admin-link">Voltar ao site</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="conteudoAdmin" class="hidden" style="width: 100%; max-width: 600px; padding: 10px;">
+        
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div class="logo-container small">
+                    <img src="./assets/img/logo-cleyson.jpeg">
+                </div>
+                <h3 style="color:white; margin:0;">Painel de Controle</h3>
+            </div>
+            <button onclick="location.reload()" style="width:auto; padding:8px 15px; background:#333; font-size:0.8rem;">SAIR</button>
         </div>
 
-        <div id="conteudoAdmin" class="hidden">
+        <div class="nav-tabs">
+            <button id="tabNovo" class="nav-tab active" onclick="mostrarFormulario()">NOVO LANÇAMENTO</button>
+            <button id="tabLista" class="nav-tab" onclick="mostrarLista()">LISTA GERAL</button>
+        </div>
+
+        <div id="telaFormulario" class="main-card animate-fade">
+            <h3 style="color:var(--gold); text-align:center; margin-top:0;">Dados da Cobrança</h3>
             
-            <div class="nav-tabs">
-                <button onclick="mostrarFormulario()" id="tabNovo" class="active">NOVO CADASTRO</button>
-                <button onclick="mostrarLista()" id="tabLista">VER LISTA</button>
+            <label class="label-gold">Nome do Peão / Grupo</label>
+            <div class="input-group">
+                <input type="text" id="nome" placeholder="Ex: João da Silva">
             </div>
 
-            <div id="telaFormulario" class="form-card animate-fade">
-                <input type="hidden" id="idDoc">
-
-                <label class="label-gold">Dados do Peão</label>
-                <input type="text" id="nome" placeholder="Nome Completo">
-                
-                <div class="row-2">
-                    <input type="tel" id="cpf" placeholder="CPF">
-                    <input type="tel" id="telefone" placeholder="WhatsApp">
+            <div class="row-2">
+                <div style="flex:1;">
+                    <label class="label-gold">CPF (Obrigatório)</label>
+                    <div class="input-group">
+                        <input type="tel" id="cpf" placeholder="Só números">
+                    </div>
                 </div>
-
-                <input type="email" id="email" placeholder="E-mail (opcional)">
-
-                <label class="label-gold">Categoria</label>
-                <select id="categoria">
-                    <option value="" disabled selected>Selecione...</option>
-                    <option value="Pre Mirim">Pré-Mirim</option>
-                    <option value="Mirim">Mirim</option>
-                    <option value="Juvenil">Juvenil</option>
-                    <option value="Adulto">Adulto</option>
-                    <option value="Veterana">Veterana</option>
-                    <option value="Xiru">Xiru</option>
-                </select>
-
-                <div class="divider"></div>
-
-                <label class="label-gold">Dados da Cobrança</label>
-                <input type="text" id="rodeio" placeholder="Nome do Rodeio / Evento">
-                
-                <input type="number" id="valor" placeholder="Valor (R$) ex: 150.00">
-
-                <label class="label-gold">Descrição / Justificativa</label>
-                <textarea id="observacao" placeholder="Ex: Acompanhamento com 1 Gaiteiro e 2 Violeiros..."></textarea>
-
-                <button id="btnSalvar" onclick="salvarDivida()" class="btn-gold">
-                    <i class="fa-solid fa-save"></i> SALVAR
-                </button>
-                
-                <button id="btnCancelar" onclick="resetarFormulario()" class="btn-outline hidden">Cancelar Edição</button>
-            </div>
-
-            <div id="telaLista" class="hidden animate-fade">
-                <div class="search-box">
-                    <input type="text" id="filtroNome" onkeyup="filtrarLista()" placeholder="🔍 Buscar por nome...">
-                </div>
-                <div id="listaChuleadores">
-                    <div class="spinner"></div>
+                <div style="flex:1;">
+                    <label class="label-gold">Categoria</label>
+                    <div class="input-group">
+                        <select id="categoria" style="padding: 16px;">
+                            <option value="Danca">Dança</option>
+                            <option value="Chula">Chula</option>
+                            <option value="Declamação">Declamação</option>
+                            <option value="Intérprete">Intérprete</option>
+                            <option value="Gaita">Gaita</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
-            <a href="index.html" class="btn-back">Sair do Painel</a>
+            <div class="row-2">
+                <div style="flex:1.5;">
+                    <label class="label-gold">Rodeio / Evento</label>
+                    <div class="input-group">
+                        <input type="text" id="rodeio" placeholder="Ex: Vacaria">
+                    </div>
+                </div>
+                <div style="flex:1;">
+                    <label class="label-gold">Valor (R$)</label>
+                    <div class="input-group">
+                        <input type="number" id="valor" placeholder="0.00">
+                    </div>
+                </div>
+            </div>
+
+            <label class="label-gold">Descrição / Justificativa</label>
+            <div class="input-group">
+                <textarea id="observacao" rows="3" placeholder="Ex: 1 Gaiteiro e 2 Violeiros..." style="width:100%; background:var(--input-bg); border:1px solid #333; color:white; padding:10px; border-radius:var(--border-radius); font-family:inherit;"></textarea>
+            </div>
+
+            <button onclick="salvarDivida()" id="btnSalvar" class="btn-gold"><i class="fa-solid fa-save"></i> SALVAR</button>
+            <button onclick="resetarFormulario()" id="btnCancelar" class="hidden" style="background:#333; color:white; margin-top:10px;">CANCELAR EDIÇÃO</button>
+        </div>
+
+        <div id="telaLista" class="hidden animate-fade">
+            <div class="input-group">
+                <i class="fa-solid fa-search input-icon"></i>
+                <input type="text" id="filtroNome" onkeyup="filtrarLista()" placeholder="Buscar nome na lista...">
+            </div>
+            
+            <div id="listaChuleadores" style="margin-top:20px;">
+                </div>
         </div>
 
     </div>

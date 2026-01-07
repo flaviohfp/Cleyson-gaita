@@ -1,4 +1,4 @@
-// --- 1. CONFIGURAÇÃO (Chaves do Cleyson) ---
+// --- 1. CONFIGURAÇÃO ---
 const firebaseConfig = {
   apiKey: "AIzaSyDoTtpGZXCKSjMugmMekmKpmBZkwOOUcuM",
   authDomain: "cleyson-gaita.firebaseapp.com",
@@ -13,95 +13,261 @@ if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore();
+const auth = firebase.auth();
+
+// INICIALIZA O EMAILJS (Você precisa criar conta gratuita no emailjs.com)
+// Substitua "SUA_PUBLIC_KEY" pela chave que o EmailJS te der
+(function(){
+    emailjs.init("SUA_PUBLIC_KEY_AQUI"); 
+})();
 
 // --- 2. UTILITÁRIOS ---
 const formatarMoeda = (valor) => {
     return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-// --- 3. LÓGICA DE BUSCA ---
-function buscarDivida() {
-    const cpfInput = document.getElementById('cpfBusca');
-    // Remove tudo que não for número
-    const cpfLimpo = cpfInput.value.replace(/\D/g, ''); 
+// --- 3. CONTROLE DE TELA (LOGIN vs CADASTRO) ---
+function toggleAuth(tipo) {
+    const loginForm = document.getElementById('form-login');
+    const cadForm = document.getElementById('form-cadastro');
+    const btnLogin = document.getElementById('btnTabLogin');
+    const btnCad = document.getElementById('btnTabCadastro');
+    const msgErro = document.getElementById('msgErroAuth');
 
-    const resDiv = document.getElementById('resultado');
-    const errDiv = document.getElementById('erro');
-    const loadDiv = document.getElementById('loading');
-    
-    // Reseta a tela
-    resDiv.innerHTML = '';
-    resDiv.classList.add('hidden');
-    errDiv.classList.add('hidden');
+    msgErro.classList.add('hidden');
 
-    // Validação
-    if(cpfLimpo.length < 1) {
-        errDiv.innerHTML = "Digite o CPF primeiro, vivente.";
-        errDiv.classList.remove('hidden');
+    if (tipo === 'login') {
+        loginForm.classList.remove('hidden');
+        cadForm.classList.add('hidden');
+        btnLogin.classList.add('active');
+        btnLogin.style.background = "linear-gradient(135deg, #b59021, var(--gold))";
+        btnLogin.style.color = "black";
+        btnCad.classList.remove('active');
+        btnCad.style.background = "transparent";
+        btnCad.style.color = "white";
+    } else {
+        loginForm.classList.add('hidden');
+        cadForm.classList.remove('hidden');
+        btnCad.classList.add('active');
+        btnCad.style.background = "linear-gradient(135deg, #b59021, var(--gold))";
+        btnCad.style.color = "black";
+        btnLogin.classList.remove('active');
+        btnLogin.style.background = "transparent";
+        btnLogin.style.color = "white";
+    }
+}
+
+// --- 4. SISTEMA DE LOGIN E CADASTRO ---
+
+// Verificar se já está logado ao abrir
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        // Usuário logado
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('dashboard-screen').classList.remove('hidden');
+        carregarDadosUsuario(user);
+    } else {
+        // Ninguém logado
+        document.getElementById('auth-screen').classList.remove('hidden');
+        document.getElementById('dashboard-screen').classList.add('hidden');
+    }
+});
+
+function fazerLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const senha = document.getElementById('loginSenha').value;
+    const msgErro = document.getElementById('msgErroAuth');
+
+    if(!email || !senha) {
+        msgErro.innerHTML = "Preencha e-mail e senha!";
+        msgErro.classList.remove('hidden');
         return;
     }
 
-    loadDiv.classList.remove('hidden'); // Mostra spinner
+    auth.signInWithEmailAndPassword(email, senha)
+        .catch((error) => {
+            msgErro.innerHTML = "Erro ao entrar: " + error.message;
+            msgErro.classList.remove('hidden');
+        });
+}
 
-    // Busca no Banco
-    db.collection("cobrancas").where("cpf", "==", cpfLimpo).get()
-    .then((querySnapshot) => {
-        loadDiv.classList.add('hidden'); // Esconde spinner
+function fazerCadastro() {
+    const nome = document.getElementById('cadNome').value;
+    const cpf = document.getElementById('cadCpf').value.replace(/\D/g, '');
+    const telefone = document.getElementById('cadTelefone').value;
+    const email = document.getElementById('cadEmail').value;
+    const senha = document.getElementById('cadSenha').value;
+    const msgErro = document.getElementById('msgErroAuth');
+
+    if(!email || !senha || !cpf || !nome) {
+        msgErro.innerHTML = "Preencha todos os campos!";
+        msgErro.classList.remove('hidden');
+        return;
+    }
+
+    // 1. Cria usuário no Auth
+    auth.createUserWithEmailAndPassword(email, senha)
+    .then((userCredential) => {
+        // 2. Salva dados extras (CPF) no Firestore
+        const user = userCredential.user;
+        return db.collection('usuarios').doc(user.uid).set({
+            nome: nome,
+            email: email,
+            cpf: cpf,
+            telefone: telefone
+        });
+    })
+    .then(() => {
+        alert("Conta criada com sucesso! Bem-vindo.");
+    })
+    .catch((error) => {
+        console.error(error);
+        msgErro.innerHTML = "Erro ao cadastrar: " + error.message;
+        msgErro.classList.remove('hidden');
+    });
+}
+
+function sair() {
+    auth.signOut();
+    location.reload();
+}
+
+// --- 5. LÓGICA DO DASHBOARD (CARREGAR DÍVIDAS) ---
+function carregarDadosUsuario(user) {
+    const spinner = document.getElementById('loading');
+    spinner.classList.remove('hidden');
+
+    // Busca o CPF do usuário logado na coleção 'usuarios'
+    db.collection('usuarios').doc(user.uid).get().then((doc) => {
+        if (doc.exists) {
+            const userData = doc.data();
+            document.getElementById('userNameDisplay').innerText = userData.nome.split(' ')[0]; // Só o primeiro nome
+            document.getElementById('userCpfDisplay').innerText = userData.cpf;
+            
+            buscarDividasPorCpf(userData.cpf, userData.email, userData.nome);
+        } else {
+            spinner.classList.add('hidden');
+            document.getElementById('listaDividas').innerHTML = "<p>Erro: Perfil de usuário não encontrado.</p>";
+        }
+    });
+}
+
+function buscarDividasPorCpf(cpf, emailUser, nomeUser) {
+    const divLista = document.getElementById('listaDividas');
+    const spinner = document.getElementById('loading');
+    
+    // Busca cobranças pendentes
+    db.collection("cobrancas")
+      .where("cpf", "==", cpf)
+      //.where("status", "!=", "pago") // Opcional: só mostrar o que não foi pago
+      .get()
+      .then((querySnapshot) => {
+        spinner.classList.add('hidden');
+        divLista.innerHTML = "";
 
         if (querySnapshot.empty) {
-            resDiv.innerHTML = "<p style='text-align:center; color:#888;'>Nenhuma pendência encontrada. <br><strong>Segue o baile! 🪗</strong></p>";
-            resDiv.classList.remove('hidden');
+            divLista.innerHTML = "<div class='result-area'><p style='text-align:center; color:#888;'>Nenhuma pendência encontrada.<br><strong>Segue o baile! 🪗</strong></p></div>";
         } else {
             let html = "";
-            let total = 0;
-
+            
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
-                let valorNumerico = parseFloat(data.valor);
-                total += valorNumerico;
+                const valor = parseFloat(data.valor);
+                const idDoc = doc.id;
+                const estaPago = data.status === 'pago';
 
-                // --- PREPARA A OBSERVAÇÃO ---
-                // Se tiver observação, cria a div com ícone. Se não, fica vazio.
+                // Observação
                 const obsHtml = data.observacao 
-                    ? `<div class="detalhe-servico">
-                         <i class="fa-solid fa-circle-info"></i> ${data.observacao}
-                       </div>` 
+                    ? `<div class="detalhe-servico"><i class="fa-solid fa-circle-info"></i> ${data.observacao}</div>` 
                     : '';
 
-                // --- MONTA O CARD ---
-                html += `
-                    <div class="result-item">
-                        <div style="font-size: 0.8rem; color: #d4af37; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
-                            ${data.rodeio}
-                        </div>
-                        
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <span style="font-size: 1.1rem; font-weight: bold;">
-                                ${data.nome} 
-                                <small style="color:#888; font-weight: normal; font-size: 0.9rem;">(${data.categoria || '-'})</small>
-                            </span>
-                            <span class="total-value">${formatarMoeda(valorNumerico)}</span>
-                        </div>
+                // Botão de Ação (Pagar ou Ver Recibo)
+                let btnAcao = "";
+                if(estaPago) {
+                    btnAcao = `<button class="btn-outline" style="margin-top:10px; color:#4CAF50; border-color:#4CAF50; cursor:default;">
+                                <i class="fa-solid fa-check"></i> PAGO
+                               </button>`;
+                } else {
+                    // Botão Pagar chama a função de pagamento passando dados para o email
+                    btnAcao = `<button onclick="realizarPagamento('${idDoc}', '${data.rodeio}', ${valor}, '${emailUser}', '${nomeUser}')" class="btn-gold">
+                                <i class="fa-solid fa-dollar-sign"></i> PAGAR AGORA
+                               </button>`;
+                }
 
-                        ${obsHtml}
+                html += `
+                    <div class="result-area">
+                        <div class="result-item" style="border:none;">
+                            <div style="font-size: 0.8rem; color: #d4af37; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">
+                                ${data.rodeio}
+                            </div>
+                            
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size: 1.1rem; font-weight: bold;">
+                                    ${data.nome} 
+                                    <small style="color:#888; font-weight: normal;">(${data.categoria || '-'})</small>
+                                </span>
+                                <span class="total-value">${formatarMoeda(valor)}</span>
+                            </div>
+
+                            ${obsHtml}
+
+                            ${btnAcao}
+                        </div>
                     </div>
                 `;
             });
-            
-            // --- TOTAL FINAL ---
-            html += `<div style="margin-top:20px; padding-top:15px; border-top: 1px dashed #444; text-align:right;">
-                        <small style="color: #aaa; letter-spacing: 1px;">TOTAL A PAGAR:</small><br>
-                        <span style="color: white; font-size: 1.8rem; font-weight: bold;">${formatarMoeda(total)}</span>
-                     </div>`;
-
-            resDiv.innerHTML = html;
-            resDiv.classList.remove('hidden');
+            divLista.innerHTML = html;
         }
+    });
+}
+
+// --- 6. PAGAMENTO E ENVIO DE E-MAIL ---
+function realizarPagamento(idDoc, nomeRodeio, valor, emailUser, nomeUser) {
+    if(!confirm(`Confirma o pagamento de ${formatarMoeda(valor)} referente ao ${nomeRodeio}? \n(Isso simulará o pagamento e enviará o recibo)`)) {
+        return;
+    }
+
+    const btn = event.target;
+    btn.innerHTML = "Processando...";
+    btn.disabled = true;
+
+    // 1. Atualiza no banco para "pago"
+    db.collection("cobrancas").doc(idDoc).update({
+        status: "pago",
+        dataPagamento: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+        // 2. Envia o E-mail via EmailJS
+        enviarEmailComprovante(emailUser, nomeUser, nomeRodeio, valor);
+        
+        alert("Pagamento confirmado! O comprovante foi enviado para seu e-mail.");
+        location.reload(); // Recarrega para atualizar a lista
     })
     .catch((error) => {
-        loadDiv.classList.add('hidden');
-        console.error("Erro:", error);
-        errDiv.innerHTML = "Erro de conexão.";
-        errDiv.classList.remove('hidden');
+        console.error("Erro no pagamento:", error);
+        alert("Erro ao processar pagamento.");
+        btn.innerHTML = "Tentar Novamente";
+        btn.disabled = false;
     });
+}
+
+function enviarEmailComprovante(emailDestino, nome, rodeio, valor) {
+    // Configuração do EmailJS
+    // Você precisa criar um template no EmailJS com as variáveis: {{nome}}, {{rodeio}}, {{valor}}
+    
+    const templateParams = {
+        to_email: emailDestino,
+        to_name: nome,
+        rodeio_nome: rodeio,
+        valor_pago: formatarMoeda(valor),
+        data_pagamento: new Date().toLocaleDateString('pt-BR')
+    };
+
+    // Substitua SERVICE_ID e TEMPLATE_ID pelos seus do EmailJS
+    emailjs.send('SERVICE_ID', 'TEMPLATE_ID', templateParams)
+        .then(function(response) {
+           console.log('E-mail enviado com sucesso!', response.status, response.text);
+        }, function(error) {
+           console.log('FALHA ao enviar e-mail...', error);
+        });
 }

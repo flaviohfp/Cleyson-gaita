@@ -299,6 +299,34 @@ button {
 }
 .row-2 input { flex: 1; }
 
+
+/* --- CSS EXTRA PARA LOGIN/CADASTRO --- */
+.btn-tab {
+    padding: 12px;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+    border: none;
+    font-size: 0.9rem;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #555;
+    color: #ccc;
+    margin-top: 10px;
+}
+.btn-outline:hover {
+    border-color: var(--text-white);
+    color: var(--text-white);
+}
+
+/* Animação suave */
+.animate-fade {
+    animation: fadeIn 0.6s ease;
+}
+
 /* --- 10. AJUSTES PARA TABLET E CELULAR PEQUENO --- */
 
 /* Celulares muito pequenos */

@@ -15,104 +15,91 @@ const db = firebase.firestore();
 
 // --- 2. VARIÁVEIS GLOBAIS ---
 let listaCobrancas = [];
-let idEdicao = null; // Se estiver null, é novo cadastro. Se tiver ID, é edição.
+let idEdicao = null; 
 
-// --- 3. FUNÇÕES DE LOGIN ---
+// --- 3. LOGIN ---
 function verificarSenha() {
     const senha = document.getElementById('senhaAdmin').value;
-    
-    // Senha simples (Pode mudar aqui)
-    if(senha === "gaita123" || senha === "admin") {
+    if(senha === "gaita123" || senha === "admin") { // Mude a senha aqui se quiser
         document.getElementById('telaLogin').classList.add('hidden');
         document.getElementById('conteudoAdmin').classList.remove('hidden');
-        carregarLista(); // Já carrega a lista ao entrar
+        carregarLista(); 
     } else {
         alert("Senha errada, vivente!");
     }
 }
 
-// --- 4. FUNÇÕES DE NAVEGAÇÃO (Abas) ---
+// --- 4. NAVEGAÇÃO ---
 function mostrarFormulario() {
     document.getElementById('telaFormulario').classList.remove('hidden');
     document.getElementById('telaLista').classList.add('hidden');
-    
     document.getElementById('tabNovo').classList.add('active');
     document.getElementById('tabLista').classList.remove('active');
-    
     resetarFormulario();
 }
 
 function mostrarLista() {
     document.getElementById('telaFormulario').classList.add('hidden');
     document.getElementById('telaLista').classList.remove('hidden');
-    
     document.getElementById('tabNovo').classList.remove('active');
     document.getElementById('tabLista').classList.add('active');
-    
     carregarLista();
 }
 
-// --- 5. SALVAR (NOVO OU EDIÇÃO) ---
+// --- 5. SALVAR ---
 function salvarDivida() {
     const btn = document.getElementById('btnSalvar');
     
-    // Pega os dados dos inputs
+    // Dados Essenciais
     const nome = document.getElementById('nome').value;
-    const cpf = document.getElementById('cpf').value.replace(/\D/g, ''); // Limpa CPF
-    const telefone = document.getElementById('telefone').value;
-    const email = document.getElementById('email').value;
+    const cpf = document.getElementById('cpf').value.replace(/\D/g, ''); 
     const categoria = document.getElementById('categoria').value;
     const rodeio = document.getElementById('rodeio').value;
     const valor = parseFloat(document.getElementById('valor').value);
-    
-    // --- NOVO: Pega a observação ---
-    const observacao = document.getElementById('observacao').value; 
+    const observacao = document.getElementById('observacao').value;
 
-    // Validação básica
     if (!nome || !cpf || !valor || !rodeio) {
-        alert("Preencha pelo menos Nome, CPF, Rodeio e Valor!");
+        alert("Preencha Nome, CPF, Rodeio e Valor!");
         return;
     }
 
     btn.innerHTML = "Salvando...";
     btn.disabled = true;
 
+    // Objeto limpo, sem email/telefone
     const dados = {
         nome: nome,
         cpf: cpf,
-        telefone: telefone,
-        email: email,
         categoria: categoria,
         rodeio: rodeio,
         valor: valor,
-        observacao: observacao, // --- SALVA NO BANCO ---
+        observacao: observacao,
+        status: "pendente", // Padrão inicial
         dataRegistro: firebase.firestore.FieldValue.serverTimestamp()
     };
 
     if (idEdicao) {
-        // MODO EDIÇÃO
+        // ATUALIZAR
         db.collection("cobrancas").doc(idEdicao).update(dados)
         .then(() => {
-            alert("Cadastro atualizado com sucesso!");
+            alert("Atualizado com sucesso!");
             finalizarSalvar();
         })
         .catch((error) => {
-            console.error("Erro ao atualizar: ", error);
+            console.error(error);
             alert("Erro ao atualizar.");
-            btn.innerHTML = "SALVAR";
             btn.disabled = false;
         });
     } else {
-        // MODO NOVO CADASTRO
+        // NOVO
         db.collection("cobrancas").add(dados)
         .then(() => {
-            alert("Dívida cadastrada com sucesso!");
+            alert("Cadastrado com sucesso!");
             finalizarSalvar();
         })
         .catch((error) => {
-            console.error("Erro ao salvar: ", error);
+            console.error(error);
             alert("Erro ao salvar.");
-            btn.innerHTML = "SALVAR";
             btn.disabled = false;
         });
     }
@@ -122,10 +109,10 @@ function finalizarSalvar() {
     resetarFormulario();
     document.getElementById('btnSalvar').innerHTML = '<i class="fa-solid fa-save"></i> SALVAR';
     document.getElementById('btnSalvar').disabled = false;
-    mostrarLista(); // Volta para a lista para ver o resultado
+    mostrarLista();
 }
 
-// --- 6. CARREGAR E LISTAR ---
+// --- 6. LISTAR ---
 function carregarLista() {
     const divLista = document.getElementById('listaChuleadores');
     divLista.innerHTML = '<div class="spinner"></div>';
@@ -142,15 +129,17 @@ function carregarLista() {
 
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            data.id = doc.id; // Guarda o ID do documento
+            data.id = doc.id;
             listaCobrancas.push(data);
             
-            // Cria o HTML do item na lista
+            // Verifica status para pintar de verde se pago
+            const corStatus = data.status === 'pago' ? '#4CAF50' : '#d4af37';
+            const textoStatus = data.status === 'pago' ? '(PAGO)' : '';
+
             const item = document.createElement('div');
             item.classList.add('item-lista-admin');
-            // Estilo inline básico para lista do admin (pode mover pro CSS se quiser)
             item.style.borderBottom = "1px solid #333";
-            item.style.padding = "10px";
+            item.style.padding = "15px";
             item.style.marginBottom = "10px";
             item.style.background = "#1a1a1a";
             item.style.borderRadius = "8px";
@@ -158,7 +147,7 @@ function carregarLista() {
             item.innerHTML = `
                 <div style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
-                        <strong style="color: #d4af37; font-size: 1.1rem;">${data.nome}</strong>
+                        <strong style="color: ${corStatus}; font-size: 1.1rem;">${data.nome} ${textoStatus}</strong>
                         <div style="font-size: 0.9rem; color: #ccc;">${data.rodeio} - R$ ${parseFloat(data.valor).toFixed(2)}</div>
                         <div style="font-size: 0.8rem; color: #666;">CPF: ${data.cpf}</div>
                     </div>
@@ -178,38 +167,30 @@ function editar(id) {
     const doc = listaCobrancas.find(x => x.id === id);
     if (!doc) return;
 
-    idEdicao = id; // Marca que estamos editando
+    idEdicao = id;
 
-    // Preenche os campos
+    // Preenche campos
     document.getElementById('nome').value = doc.nome;
     document.getElementById('cpf').value = doc.cpf;
-    document.getElementById('telefone').value = doc.telefone;
-    document.getElementById('email').value = doc.email;
     document.getElementById('categoria').value = doc.categoria;
     document.getElementById('rodeio').value = doc.rodeio;
     document.getElementById('valor').value = doc.valor;
-    
-    // --- NOVO: Preenche a observação na edição ---
-    document.getElementById('observacao').value = doc.observacao || ''; 
+    document.getElementById('observacao').value = doc.observacao || '';
 
-    // Muda visual dos botões
     document.getElementById('btnSalvar').innerHTML = "ATUALIZAR DADOS";
     document.getElementById('btnCancelar').classList.remove('hidden');
-    
     mostrarFormulario();
 }
 
 function excluir(id) {
-    if(confirm("Tem certeza que quer apagar essa dívida?")) {
+    if(confirm("Tem certeza que quer apagar?")) {
         db.collection("cobrancas").doc(id).delete().then(() => {
             carregarLista();
-        }).catch((error) => {
-            console.error("Erro ao excluir: ", error);
         });
     }
 }
 
-// --- 8. FILTRO DE BUSCA NA LISTA ---
+// --- 8. FILTRO ---
 function filtrarLista() {
     const termo = document.getElementById('filtroNome').value.toLowerCase();
     const divLista = document.getElementById('listaChuleadores');
@@ -218,14 +199,16 @@ function filtrarLista() {
     const filtrados = listaCobrancas.filter(item => item.nome.toLowerCase().includes(termo));
 
     if (filtrados.length === 0) {
-        divLista.innerHTML = "<p style='text-align:center'>Ninguém encontrado.</p>";
+        divLista.innerHTML = "<p style='text-align:center; padding:20px;'>Ninguém encontrado.</p>";
         return;
     }
 
     filtrados.forEach(data => {
+        const corStatus = data.status === 'pago' ? '#4CAF50' : '#d4af37';
+        
         const item = document.createElement('div');
         item.style.borderBottom = "1px solid #333";
-        item.style.padding = "10px";
+        item.style.padding = "15px";
         item.style.marginBottom = "10px";
         item.style.background = "#1a1a1a";
         item.style.borderRadius = "8px";
@@ -233,7 +216,7 @@ function filtrarLista() {
         item.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <div>
-                    <strong style="color: #d4af37;">${data.nome}</strong>
+                    <strong style="color: ${corStatus};">${data.nome}</strong>
                     <div style="font-size: 0.9rem; color: #ccc;">${data.rodeio} - R$ ${parseFloat(data.valor).toFixed(2)}</div>
                 </div>
                 <div>
@@ -251,15 +234,11 @@ function resetarFormulario() {
     idEdicao = null;
     document.getElementById('nome').value = '';
     document.getElementById('cpf').value = '';
-    document.getElementById('telefone').value = '';
-    document.getElementById('email').value = '';
     document.getElementById('categoria').selectedIndex = 0;
     document.getElementById('rodeio').value = '';
     document.getElementById('valor').value = '';
+    document.getElementById('observacao').value = '';
     
-    // --- NOVO: Limpa a observação ---
-    document.getElementById('observacao').value = ''; 
-
     document.getElementById('btnSalvar').innerHTML = '<i class="fa-solid fa-save"></i> SALVAR';
     document.getElementById('btnCancelar').classList.add('hidden');
 }
