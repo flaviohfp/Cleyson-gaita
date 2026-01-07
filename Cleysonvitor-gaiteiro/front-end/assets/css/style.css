@@ -1,0 +1,277 @@
+/* --- 1. CONFIGURAÇÕES GERAIS E CORES --- */
+:root {
+    --bg-black: #050505;
+    --card-bg: #121212;
+    --gold: #d4af37;
+    --gold-hover: #b59021;
+    --text-white: #e0e0e0;
+    --text-gray: #888888;
+    --input-bg: #1e1e1e;
+    --border-radius: 12px;
+}
+
+/* Reset básico para garantir que padding não estoure larguras */
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-black);
+    color: var(--text-white);
+    font-family: 'Segoe UI', Roboto, Helvetica, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* Previne rolagem lateral indesejada no celular */
+    overflow-x: hidden; 
+}
+
+/* Container Principal do App */
+.app-wrapper {
+    width: 100%;
+    /* No celular fica 100%, mas limita a 480px para não ficar esticado demais */
+    max-width: 480px; 
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+/* --- 2. LOGO --- */
+.logo-area {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-container {
+    width: 140px;
+    height: 140px;
+    margin: 0 auto;
+    border-radius: 50%;
+    border: 3px solid var(--gold);
+    overflow: hidden;
+    background-color: #000;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); /* Brilho dourado */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Para logos menores dentro do modal/admin */
+.logo-container.small {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 15px;
+    box-shadow: none;
+}
+
+/* --- 3. CARTÃO PRINCIPAL --- */
+.main-card {
+    background-color: var(--card-bg);
+    padding: 30px 25px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.7);
+    border-top: 2px solid var(--gold);
+}
+
+.card-header h2 {
+    color: var(--gold);
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 1.3rem;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.card-header p {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    text-align: center;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* --- 4. INPUTS (Otimizados para Toque) --- */
+.input-group {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    z-index: 2;
+}
+
+/* Input com tamanho de fonte 16px evita zoom automático no iPhone */
+input, select {
+    width: 100%;
+    background-color: var(--input-bg);
+    border: 1px solid #333;
+    padding: 16px; /* Área de toque maior */
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: 1rem; 
+    outline: none;
+    transition: 0.3s;
+    -webkit-appearance: none; /* Remove estilo padrão iOS */
+}
+
+/* Ajuste específico para quando tem ícone */
+.input-group input { padding-left: 45px; }
+
+input:focus, select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+/* --- 5. BOTÕES --- */
+button {
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+    padding: 16px; /* Botão alto é melhor para tablet */
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    border: none;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    margin-top: 10px;
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, #b59021, var(--gold));
+    color: #050505; /* Preto para contraste */
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+}
+
+.btn-gold:active { transform: scale(0.97); }
+
+/* --- 6. RESULTADOS --- */
+.result-area {
+    margin-top: 25px;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--gold);
+    padding: 15px;
+    border-radius: 8px;
+    animation: fadeIn 0.5s ease;
+}
+
+.spinner {
+    border: 3px solid rgba(255,255,255,0.1);
+    border-radius: 50%;
+    border-top: 3px solid var(--gold);
+    width: 30px; height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+@keyframes spin { 100% { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.hidden { display: none !important; }
+.error-msg { color: #ff6b6b; text-align: center; margin-top: 15px; background: rgba(255,107,107,0.1); padding: 10px; border-radius: 8px; }
+
+/* --- 7. RODAPÉ E LINK ADMIN --- */
+.footer-area {
+    margin-top: 40px;
+    text-align: center;
+    color: #444;
+    font-size: 0.85rem;
+}
+
+.admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 12px;
+    transition: 0.3s;
+}
+.admin-link:hover { color: var(--gold); }
+
+/* --- 8. MODAL DO ADMIN (Crucial para o Tablet) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.92); /* Fundo bem escuro para foco */
+    backdrop-filter: blur(5px);
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px; /* Margem de segurança */
+}
+
+.modal-content {
+    background: var(--card-bg);
+    width: 100%;
+    max-width: 500px; /* Um pouco mais largo no tablet */
+    padding: 25px;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gold);
+    position: relative;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    
+    /* Isso garante que se o teclado subir, o modal não some */
+    max-height: 90vh; 
+}
+
+/* Área de Rolagem do Formulário */
+/* Se o conteúdo for maior que a tela (teclado aberto), ele rola */
+.scrollable-form {
+    overflow-y: auto; 
+    padding-right: 5px; /* Espaço para a barra de rolagem */
+    margin-top: 10px;
+}
+
+.btn-close-modal {
+    position: absolute;
+    top: 10px; right: 15px;
+    background: none; border: none; color: #fff;
+    font-size: 2rem;
+    padding: 0;
+    width: auto;
+    margin: 0;
+}
+
+/* Títulos e Labels do Admin */
+.admin-title { text-align: center; color: var(--gold); letter-spacing: 2px; margin: 5px 0 20px 0; }
+.label-gold { color: var(--gold); font-size: 0.8rem; text-transform: uppercase; font-weight: bold; margin: 15px 0 5px 0; display: block; }
+.divider { border: 0; border-top: 1px solid #333; margin: 20px 0; }
+.muted { color: #888; font-size: 0.9rem; }
+.text-center { text-align: center; }
+
+/* Grid para 2 inputs lado a lado (Funciona bem no Tablet) */
+.row-2 {
+    display: flex;
+    gap: 10px;
+}
+.row-2 input { flex: 1; }
+
+/* --- 9. AJUSTES PARA TABLET E CELULAR PEQUENO --- */
+
+/* Celulares muito pequenos */
+@media (max-width: 360px) {
+    .row-2 { flex-direction: column; gap: 0; } /* Empilha inputs */
+    .logo-container { width: 100px; height: 100px; }
+}
+
+/* Tablets (iPad, etc) */
+@media (min-width: 768px) {
+    .app-wrapper { max-width: 550px; } /* Aproveita melhor a tela */
+    .main-card { padding: 40px; }
+}

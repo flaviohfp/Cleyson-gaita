@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gaiteiro - Cobrança da Chula</title>
+    
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-wrapper">
+        
+        <header class="logo-area">
+            <div class="logo-container">
+                <img src="./assets/img/logo-cleyson.jpeg" alt="Logo Gaiteiro" class="brand-logo">
+            </div>
+        </header>
+
+        <main class="main-card">
+            <div class="card-header">
+                <h2>Consulta de Valores</h2>
+                <p>Chuleador, informe seu CPF para verificar as pendências.</p>
+            </div>
+
+            <div class="input-group">
+                <i class="fa-solid fa-id-card input-icon"></i>
+                <input type="tel" id="cpfBusca" placeholder="CPF (somente números)" maxlength="14">
+            </div>
+
+            <button onclick="buscarDivida()" class="btn-gold">
+                CONSULTAR <i class="fa-solid fa-arrow-right"></i>
+            </button>
+
+            <div id="loading" class="hidden"><div class="spinner"></div></div>
+            <div id="resultado" class="result-area hidden"></div>
+            <div id="erro" class="error-msg hidden"></div>
+        </main>
+
+        <footer class="footer-area">
+            <p onclick="abrirAdmin()" class="admin-link">
+                <i class="fa-solid fa-lock"></i> Área Restrita
+            </p>
+            <p>&copy; Sistema de Cobrança da Chula</p>
+        </footer>
+
+    </div>
+
+    <div id="modalAdmin" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button onclick="fecharAdmin()" class="btn-close-modal">&times;</button>
+            
+            <div class="logo-container small">
+                <img src="./assets/img/logo-cleyson.jpeg" alt="Logo" class="brand-logo">
+            </div>
+            <h3 class="admin-title">PAINEL DO GAITEIRO</h3>
+
+            <div id="loginScreen">
+                <p class="text-center muted">Digite a senha para acessar.</p>
+                <div class="input-group">
+                    <i class="fa-solid fa-key input-icon"></i>
+                    <input type="password" id="senhaAdminInput" placeholder="Senha">
+                </div>
+                <button onclick="fazerLoginAdmin()" class="btn-gold">ENTRAR</button>
+            </div>
+
+            <div id="painelCadastro" class="hidden animate-fade">
+                <div class="scrollable-form">
+                    <label class="label-gold">Dados do Peão</label>
+                    <input type="text" id="nomeChuleador" placeholder="Nome Completo">
+                    
+                    <div class="row-2">
+                        <input type="tel" id="cpfCadastro" placeholder="CPF">
+                        <input type="tel" id="telefoneChuleador" placeholder="WhatsApp">
+                    </div>
+                    
+                    <input type="email" id="emailChuleador" placeholder="E-mail (opcional)">
+
+                    <select id="categoriaChuleador">
+                        <option value="" disabled selected>Selecione a Categoria</option>
+                        <option value="Pre Mirim">Pré-Mirim</option>
+                        <option value="Mirim">Mirim</option>
+                        <option value="Juvenil">Juvenil</option>
+                        <option value="Adulto">Adulto</option>
+                        <option value="Veterana">Veterana</option>
+                        <option value="Xiru">Xiru</option>
+                        <option value="Vaqueano">Vaqueano</option>
+                    </select>
+
+                    <hr class="divider">
+
+                    <label class="label-gold">Dados do Rodeio</label>
+                    <input type="text" id="nomeRodeio" placeholder="Nome do Rodeio / Evento">
+                    
+                    <div class="input-group">
+                        <i class="fa-solid fa-money-bill input-icon"></i>
+                        <input type="number" id="valorCobrar" placeholder="Valor (R$)">
+                    </div>
+
+                    <button onclick="cadastrarDivida()" class="btn-gold mt-20">
+                        <i class="fa-solid fa-save"></i> SALVAR
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="./assets/js/client.js"></script>
+</body>
+</html>

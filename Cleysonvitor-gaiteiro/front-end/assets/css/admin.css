@@ -1,0 +1,52 @@
+/* --- ESTILOS EXCLUSIVOS DO ADMIN --- */
+
+/* Título abaixo da logo */
+.admin-title {
+    color: var(--gold);
+    margin: 10px 0 0 0;
+    text-align: center;
+    font-size: 1rem;
+    letter-spacing: 2px;
+}
+
+/* Labels douradas em cima dos inputs */
+.label-gold {
+    color: var(--gold);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 15px 0 8px 0;
+    display: block;
+    font-weight: bold;
+}
+
+/* Grid para colocar 2 inputs na mesma linha (CPF e Whats) */
+.row-2 {
+    display: flex;
+    gap: 10px;
+}
+.row-2 input {
+    flex: 1; /* Faz os dois ocuparem o mesmo tamanho */
+}
+
+/* Ajuste do Select para parecer com os inputs */
+select {
+    width: 100%;
+    background-color: var(--input-bg);
+    border: 1px solid #333;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    color: white;
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+select:focus { border-color: var(--gold); }
+select option { background-color: #121212; }
+
+/* Utilitários visuais */
+.divider { border: 0; border-top: 1px solid #333; margin: 20px 0; }
+.mt-20 { margin-top: 20px; }
+.text-center { text-align: center; }
+.muted { color: #888; font-size: 0.9rem; }
