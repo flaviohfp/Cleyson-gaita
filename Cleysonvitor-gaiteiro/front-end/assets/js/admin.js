@@ -43,7 +43,7 @@ function validarCPF(cpf) {
 // --- 3. LOGIN ---
 function verificarSenha() {
     const senha = document.getElementById('senhaAdmin').value;
-    if(senha === "gaita123" || senha === "admin") { 
+    if(senha === "Admincvf." || senha === "Admincvf.") { 
         document.getElementById('telaLogin').classList.add('hidden');
         document.getElementById('conteudoAdmin').classList.remove('hidden');
         carregarLista(); 
