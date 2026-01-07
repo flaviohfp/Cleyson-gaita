@@ -1,73 +1,90 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Gaiteiro</title>
-    <link rel="stylesheet" href="./assets/css/admin.css" />
-  </head>
-  <body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Gaiteiro</title>
+    <link rel="stylesheet" href="./assets/css/admin.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
     <div class="admin-wrapper">
-      <div class="header-admin">
-        <img
-          src="./assets/img/logo-cleyson.jpeg"
-          class="logo-mini"
-          alt="Logo"
-        />
-        <h2 class="admin-title">Painel Administrativo</h2>
-      </div>
-
-      <div id="telaLogin" class="login-card">
-        <p>Informe a senha do Gaiteiro:</p>
-        <input
-          type="password"
-          id="senhaAdmin"
-          placeholder="Senha"
-          style="text-align: center"
-        />
-        <button onclick="verificarSenha()" class="btn-gold">ENTRAR</button>
-        <a href="index.html" class="btn-back">Voltar para o site</a>
-      </div>
-
-      <div id="telaCadastro" class="form-card hidden">
-        <label class="label-gold">Dados do Peão</label>
-        <input type="text" id="nome" placeholder="Nome Completo" />
-
-        <div class="row-2">
-          <input type="tel" id="cpf" placeholder="CPF" />
-          <input type="tel" id="telefone" placeholder="WhatsApp" />
+        
+        <div class="header-admin">
+            <img src="./assets/img/logo-cleyson.jpeg" class="logo-mini" alt="Logo">
+            <h2 class="admin-title">Painel Administrativo</h2>
         </div>
 
-        <input type="email" id="email" placeholder="E-mail (opcional)" />
+        <div id="telaLogin" class="login-card">
+            <p>Informe a senha do Gaiteiro:</p>
+            <input type="password" id="senhaAdmin" placeholder="Senha" style="text-align:center;">
+            <button onclick="verificarSenha()" class="btn-gold">ENTRAR</button>
+            <a href="index.html" class="btn-back">Voltar para o site</a>
+        </div>
 
-        <label class="label-gold">Categoria</label>
-        <select id="categoria">
-          <option value="" disabled selected>Selecione...</option>
-          <option value="Pre Mirim">Pré-Mirim</option>
-          <option value="Mirim">Mirim</option>
-          <option value="Juvenil">Juvenil</option>
-          <option value="Adulto">Adulto</option>
-          <option value="Veterana">Veterana</option>
-          <option value="Xiru">Xiru</option>
-        </select>
+        <div id="conteudoAdmin" class="hidden">
+            
+            <div class="nav-tabs">
+                <button onclick="mostrarFormulario()" id="tabNovo" class="active">NOVO CADASTRO</button>
+                <button onclick="mostrarLista()" id="tabLista">VER LISTA</button>
+            </div>
 
-        <div class="divider"></div>
+            <div id="telaFormulario" class="form-card animate-fade">
+                <input type="hidden" id="idDoc">
 
-        <label class="label-gold">Dados da Cobrança</label>
-        <input type="text" id="rodeio" placeholder="Nome do Rodeio / Evento" />
+                <label class="label-gold">Dados do Peão</label>
+                <input type="text" id="nome" placeholder="Nome Completo">
+                
+                <div class="row-2">
+                    <input type="tel" id="cpf" placeholder="CPF">
+                    <input type="tel" id="telefone" placeholder="WhatsApp">
+                </div>
 
-        <input type="number" id="valor" placeholder="Valor (R$) ex: 150.00" />
+                <input type="email" id="email" placeholder="E-mail (opcional)">
 
-        <button id="btnSalvar" onclick="salvarDivida()" class="btn-gold">
-          SALVAR CADASTRO
-        </button>
+                <label class="label-gold">Categoria</label>
+                <select id="categoria">
+                    <option value="" disabled selected>Selecione...</option>
+                    <option value="Pre Mirim">Pré-Mirim</option>
+                    <option value="Mirim">Mirim</option>
+                    <option value="Juvenil">Juvenil</option>
+                    <option value="Adulto">Adulto</option>
+                    <option value="Veterana">Veterana</option>
+                    <option value="Xiru">Xiru</option>
+                </select>
 
-        <a href="index.html" class="btn-back">Sair</a>
-      </div>
+                <div class="divider"></div>
+
+                <label class="label-gold">Dados da Cobrança</label>
+                <input type="text" id="rodeio" placeholder="Nome do Rodeio / Evento">
+                
+                <input type="number" id="valor" placeholder="Valor (R$) ex: 150.00">
+
+                <button id="btnSalvar" onclick="salvarDivida()" class="btn-gold">
+                    <i class="fa-solid fa-save"></i> SALVAR
+                </button>
+                
+                <button id="btnCancelar" onclick="resetarFormulario()" class="btn-outline hidden">Cancelar Edição</button>
+            </div>
+
+            <div id="telaLista" class="hidden animate-fade">
+                <div class="search-box">
+                    <input type="text" id="filtroNome" onkeyup="filtrarLista()" placeholder="🔍 Buscar por nome...">
+                </div>
+                <div id="listaChuleadores">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+
+            <a href="index.html" class="btn-back">Sair do Painel</a>
+        </div>
+
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="./assets/js/admin.js"></script>
-  </body>
+
+</body>
 </html>
