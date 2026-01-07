@@ -1,4 +1,4 @@
-// --- CONFIGURAÇÃO FIREBASE ---
+// --- 1. CONFIGURAÇÃO DO FIREBASE ---
 const firebaseConfig = {
   apiKey: "AIzaSyDoTtpGZXCKSjMugmMekmKpmBZkwOOUcuM",
   authDomain: "cleyson-gaita.firebaseapp.com",
@@ -8,32 +8,38 @@ const firebaseConfig = {
   appId: "1:227994892194:web:127d95a5ae0ac77bdf24fb"
 };
 
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
 
-// --- VARIÁVEIS GLOBAIS ---
-let listaCache = []; // Para guardar a lista e não gastar leitura do Firebase à toa no filtro
+// --- 2. VARIÁVEIS GLOBAIS ---
+let listaCobrancas = [];
+let idEdicao = null; // Se estiver null, é novo cadastro. Se tiver ID, é edição.
 
-// --- 1. LOGIN ---
+// --- 3. FUNÇÕES DE LOGIN ---
 function verificarSenha() {
     const senha = document.getElementById('senhaAdmin').value;
-    if (senha === "1234") {
+    
+    // Senha simples (Pode mudar aqui)
+    if(senha === "gaita123" || senha === "admin") {
         document.getElementById('telaLogin').classList.add('hidden');
         document.getElementById('conteudoAdmin').classList.remove('hidden');
-        // Já carrega a lista pra ficar pronta
-        carregarListaFirebase();
+        carregarLista(); // Já carrega a lista ao entrar
     } else {
         alert("Senha errada, vivente!");
     }
 }
 
-// --- 2. CONTROLE DE ABAS (Novo / Lista) ---
+// --- 4. FUNÇÕES DE NAVEGAÇÃO (Abas) ---
 function mostrarFormulario() {
     document.getElementById('telaFormulario').classList.remove('hidden');
     document.getElementById('telaLista').classList.add('hidden');
     
     document.getElementById('tabNovo').classList.add('active');
     document.getElementById('tabLista').classList.remove('active');
+    
+    resetarFormulario();
 }
 
 function mostrarLista() {
@@ -43,162 +49,217 @@ function mostrarLista() {
     document.getElementById('tabNovo').classList.remove('active');
     document.getElementById('tabLista').classList.add('active');
     
-    carregarListaFirebase(); // Atualiza a lista
+    carregarLista();
 }
 
-// --- 3. SALVAR OU ATUALIZAR ---
+// --- 5. SALVAR (NOVO OU EDIÇÃO) ---
 function salvarDivida() {
-    const idDoc = document.getElementById('idDoc').value; // Se tiver ID, é edição
+    const btn = document.getElementById('btnSalvar');
+    
+    // Pega os dados dos inputs
     const nome = document.getElementById('nome').value;
-    const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+    const cpf = document.getElementById('cpf').value.replace(/\D/g, ''); // Limpa CPF
     const telefone = document.getElementById('telefone').value;
     const email = document.getElementById('email').value;
     const categoria = document.getElementById('categoria').value;
     const rodeio = document.getElementById('rodeio').value;
-    const valor = document.getElementById('valor').value;
+    const valor = parseFloat(document.getElementById('valor').value);
+    
+    // --- NOVO: Pega a observação ---
+    const observacao = document.getElementById('observacao').value; 
 
-    if (!nome || !cpf || !valor || !categoria) {
-        alert("Preencha os campos obrigatórios!");
+    // Validação básica
+    if (!nome || !cpf || !valor || !rodeio) {
+        alert("Preencha pelo menos Nome, CPF, Rodeio e Valor!");
         return;
     }
 
-    const btn = document.getElementById('btnSalvar');
-    const txtOriginal = btn.innerHTML;
-    btn.innerHTML = "Processando...";
+    btn.innerHTML = "Salvando...";
     btn.disabled = true;
 
     const dados = {
-        nome, cpf, telefone, email, categoria, rodeio,
-        valor: parseFloat(valor),
-        status: "pendente"
+        nome: nome,
+        cpf: cpf,
+        telefone: telefone,
+        email: email,
+        categoria: categoria,
+        rodeio: rodeio,
+        valor: valor,
+        observacao: observacao, // --- SALVA NO BANCO ---
+        dataRegistro: firebase.firestore.FieldValue.serverTimestamp()
     };
 
-    let promessa;
-
-    // DECISÃO: EDITAR ou CRIAR?
-    if (idDoc) {
-        // ATUALIZAR (Update)
-        promessa = db.collection("cobrancas").doc(idDoc).update(dados);
+    if (idEdicao) {
+        // MODO EDIÇÃO
+        db.collection("cobrancas").doc(idEdicao).update(dados)
+        .then(() => {
+            alert("Cadastro atualizado com sucesso!");
+            finalizarSalvar();
+        })
+        .catch((error) => {
+            console.error("Erro ao atualizar: ", error);
+            alert("Erro ao atualizar.");
+            btn.innerHTML = "SALVAR";
+            btn.disabled = false;
+        });
     } else {
-        // CRIAR NOVO (Add)
-        dados.data_cadastro = firebase.firestore.FieldValue.serverTimestamp();
-        promessa = db.collection("cobrancas").add(dados);
+        // MODO NOVO CADASTRO
+        db.collection("cobrancas").add(dados)
+        .then(() => {
+            alert("Dívida cadastrada com sucesso!");
+            finalizarSalvar();
+        })
+        .catch((error) => {
+            console.error("Erro ao salvar: ", error);
+            alert("Erro ao salvar.");
+            btn.innerHTML = "SALVAR";
+            btn.disabled = false;
+        });
     }
-
-    promessa.then(() => {
-        alert(idDoc ? "✅ Atualizado com sucesso!" : "✅ Cadastrado com sucesso!");
-        resetarFormulario();
-        btn.innerHTML = txtOriginal;
-        btn.disabled = false;
-        carregarListaFirebase(); // Atualiza a lista no fundo
-    })
-    .catch((erro) => {
-        alert("Erro: " + erro.message);
-        btn.innerHTML = txtOriginal;
-        btn.disabled = false;
-    });
 }
 
-// --- 4. CARREGAR LISTA ---
-function carregarListaFirebase() {
-    const container = document.getElementById('listaChuleadores');
-    // container.innerHTML = '<div class="spinner"></div>'; // Loading
+function finalizarSalvar() {
+    resetarFormulario();
+    document.getElementById('btnSalvar').innerHTML = '<i class="fa-solid fa-save"></i> SALVAR';
+    document.getElementById('btnSalvar').disabled = false;
+    mostrarLista(); // Volta para a lista para ver o resultado
+}
 
-    db.collection("cobrancas").orderBy("data_cadastro", "desc").get()
+// --- 6. CARREGAR E LISTAR ---
+function carregarLista() {
+    const divLista = document.getElementById('listaChuleadores');
+    divLista.innerHTML = '<div class="spinner"></div>';
+
+    db.collection("cobrancas").orderBy("dataRegistro", "desc").get()
     .then((querySnapshot) => {
-        listaCache = [];
-        let html = "";
+        listaCobrancas = [];
+        divLista.innerHTML = "";
+
+        if (querySnapshot.empty) {
+            divLista.innerHTML = "<p style='text-align:center; color:#888'>Nenhum cadastro ainda.</p>";
+            return;
+        }
 
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // Salva no cache com o ID
-            listaCache.push({ id: doc.id, ...data });
+            data.id = doc.id; // Guarda o ID do documento
+            listaCobrancas.push(data);
+            
+            // Cria o HTML do item na lista
+            const item = document.createElement('div');
+            item.classList.add('item-lista-admin');
+            // Estilo inline básico para lista do admin (pode mover pro CSS se quiser)
+            item.style.borderBottom = "1px solid #333";
+            item.style.padding = "10px";
+            item.style.marginBottom = "10px";
+            item.style.background = "#1a1a1a";
+            item.style.borderRadius = "8px";
+
+            item.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="color: #d4af37; font-size: 1.1rem;">${data.nome}</strong>
+                        <div style="font-size: 0.9rem; color: #ccc;">${data.rodeio} - R$ ${parseFloat(data.valor).toFixed(2)}</div>
+                        <div style="font-size: 0.8rem; color: #666;">CPF: ${data.cpf}</div>
+                    </div>
+                    <div>
+                        <button onclick="editar('${data.id}')" style="width:auto; padding: 8px 12px; font-size:0.8rem; margin-right:5px; background:#444;">✏️</button>
+                        <button onclick="excluir('${data.id}')" style="width:auto; padding: 8px 12px; font-size:0.8rem; background:#8b0000; color:white;">🗑️</button>
+                    </div>
+                </div>
+            `;
+            divLista.appendChild(item);
         });
-
-        renderizarLista(listaCache);
     });
 }
 
-function renderizarLista(lista) {
-    const container = document.getElementById('listaChuleadores');
+// --- 7. EDITAR E EXCLUIR ---
+function editar(id) {
+    const doc = listaCobrancas.find(x => x.id === id);
+    if (!doc) return;
+
+    idEdicao = id; // Marca que estamos editando
+
+    // Preenche os campos
+    document.getElementById('nome').value = doc.nome;
+    document.getElementById('cpf').value = doc.cpf;
+    document.getElementById('telefone').value = doc.telefone;
+    document.getElementById('email').value = doc.email;
+    document.getElementById('categoria').value = doc.categoria;
+    document.getElementById('rodeio').value = doc.rodeio;
+    document.getElementById('valor').value = doc.valor;
     
-    if(lista.length === 0) {
-        container.innerHTML = "<p style='text-align:center; color:#666;'>Ninguém devendo? Duvido! 😂</p>";
-        return;
-    }
+    // --- NOVO: Preenche a observação na edição ---
+    document.getElementById('observacao').value = doc.observacao || ''; 
 
-    let html = "";
-    lista.forEach((item) => {
-        html += `
-            <div class="card-item">
-                <div>
-                    <span class="info-nome">${item.nome}</span>
-                    <span class="info-sub">CPF: ${item.cpf} | ${item.rodeio}</span>
-                    <span class="info-sub" style="color:var(--gold)">R$ ${parseFloat(item.valor).toFixed(2)}</span>
-                </div>
-                <div class="actions">
-                    <button onclick="editarItem('${item.id}')" class="btn-icon edit-btn">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
-                    <button onclick="excluirItem('${item.id}', '${item.nome}')" class="btn-icon delete-btn">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-    container.innerHTML = html;
-}
-
-// --- 5. EDITAR E EXCLUIR ---
-function editarItem(id) {
-    // Acha o item na memória (cache)
-    const item = listaCache.find(i => i.id === id);
-    if(!item) return;
-
-    // Preenche o formulário
-    document.getElementById('idDoc').value = item.id;
-    document.getElementById('nome').value = item.nome;
-    document.getElementById('cpf').value = item.cpf;
-    document.getElementById('telefone').value = item.telefone;
-    document.getElementById('email').value = item.email;
-    document.getElementById('categoria').value = item.categoria;
-    document.getElementById('rodeio').value = item.rodeio;
-    document.getElementById('valor').value = item.valor;
-
-    // Muda o texto do botão
+    // Muda visual dos botões
     document.getElementById('btnSalvar').innerHTML = "ATUALIZAR DADOS";
     document.getElementById('btnCancelar').classList.remove('hidden');
-
-    // Volta pra aba de formulário
+    
     mostrarFormulario();
 }
 
-function excluirItem(id, nome) {
-    if(confirm(`Tem certeza que quer excluir o calote do ${nome}?`)) {
-        db.collection("cobrancas").doc(id).delete()
-        .then(() => {
-            alert("Excluído com sucesso!");
-            carregarListaFirebase();
+function excluir(id) {
+    if(confirm("Tem certeza que quer apagar essa dívida?")) {
+        db.collection("cobrancas").doc(id).delete().then(() => {
+            carregarLista();
+        }).catch((error) => {
+            console.error("Erro ao excluir: ", error);
         });
     }
 }
 
-// --- 6. UTILITÁRIOS ---
-function resetarFormulario() {
-    document.getElementById('idDoc').value = "";
-    document.getElementById('nome').value = "";
-    document.getElementById('cpf').value = "";
-    document.getElementById('telefone').value = "";
-    document.getElementById('email').value = "";
-    document.getElementById('valor').value = "";
-    
-    document.getElementById('btnSalvar').innerHTML = "<i class='fa-solid fa-save'></i> SALVAR";
-    document.getElementById('btnCancelar').classList.add('hidden');
-}
-
+// --- 8. FILTRO DE BUSCA NA LISTA ---
 function filtrarLista() {
     const termo = document.getElementById('filtroNome').value.toLowerCase();
-    const filtrados = listaCache.filter(item => item.nome.toLowerCase().includes(termo));
-    renderizarLista(filtrados);
+    const divLista = document.getElementById('listaChuleadores');
+    divLista.innerHTML = "";
+
+    const filtrados = listaCobrancas.filter(item => item.nome.toLowerCase().includes(termo));
+
+    if (filtrados.length === 0) {
+        divLista.innerHTML = "<p style='text-align:center'>Ninguém encontrado.</p>";
+        return;
+    }
+
+    filtrados.forEach(data => {
+        const item = document.createElement('div');
+        item.style.borderBottom = "1px solid #333";
+        item.style.padding = "10px";
+        item.style.marginBottom = "10px";
+        item.style.background = "#1a1a1a";
+        item.style.borderRadius = "8px";
+
+        item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="color: #d4af37;">${data.nome}</strong>
+                    <div style="font-size: 0.9rem; color: #ccc;">${data.rodeio} - R$ ${parseFloat(data.valor).toFixed(2)}</div>
+                </div>
+                <div>
+                    <button onclick="editar('${data.id}')" style="width:auto; padding: 5px 10px; font-size:0.8rem; background:#444;">✏️</button>
+                    <button onclick="excluir('${data.id}')" style="width:auto; padding: 5px 10px; font-size:0.8rem; background:#8b0000; color:white;">🗑️</button>
+                </div>
+            </div>
+        `;
+        divLista.appendChild(item);
+    });
+}
+
+// --- 9. RESET ---
+function resetarFormulario() {
+    idEdicao = null;
+    document.getElementById('nome').value = '';
+    document.getElementById('cpf').value = '';
+    document.getElementById('telefone').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('categoria').selectedIndex = 0;
+    document.getElementById('rodeio').value = '';
+    document.getElementById('valor').value = '';
+    
+    // --- NOVO: Limpa a observação ---
+    document.getElementById('observacao').value = ''; 
+
+    document.getElementById('btnSalvar').innerHTML = '<i class="fa-solid fa-save"></i> SALVAR';
+    document.getElementById('btnCancelar').classList.add('hidden');
 }
