@@ -13,14 +13,37 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 
-// --- 2. VARIÁVEIS GLOBAIS ---
+// --- 2. VARIÁVEIS GLOBAIS E UTILITÁRIOS ---
 let listaCobrancas = [];
 let idEdicao = null; 
+
+// [NOVO] Função de Validar CPF (Mesma do cliente)
+function validarCPF(cpf) {
+    cpf = cpf.replace(/[^\d]+/g,'');
+    if(cpf == '') return false;
+    // Elimina CPFs invalidos conhecidos
+    if (cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    
+    // Valida 1o digito
+    let add = 0;
+    for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
+    let rev = 11 - (add % 11);
+    if (rev == 10 || rev == 11) rev = 0;
+    if (rev != parseInt(cpf.charAt(9))) return false;
+    
+    // Valida 2o digito
+    add = 0;
+    for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
+    rev = 11 - (add % 11);
+    if (rev == 10 || rev == 11) rev = 0;
+    if (rev != parseInt(cpf.charAt(10))) return false;
+    return true;
+}
 
 // --- 3. LOGIN ---
 function verificarSenha() {
     const senha = document.getElementById('senhaAdmin').value;
-    if(senha === "gaita123" || senha === "admin") { // Mude a senha aqui se quiser
+    if(senha === "gaita123" || senha === "admin") { 
         document.getElementById('telaLogin').classList.add('hidden');
         document.getElementById('conteudoAdmin').classList.remove('hidden');
         carregarLista(); 
@@ -46,7 +69,7 @@ function mostrarLista() {
     carregarLista();
 }
 
-// --- 5. SALVAR ---
+// --- 5. SALVAR (ATUALIZADO COM VALIDAÇÃO) ---
 function salvarDivida() {
     const btn = document.getElementById('btnSalvar');
     
@@ -63,10 +86,17 @@ function salvarDivida() {
         return;
     }
 
+    // [NOVO] Verifica CPF antes de salvar
+    if (!validarCPF(cpf)) {
+        alert("CPF Inválido! Verifique os números, senão o peão não consegue acessar.");
+        document.getElementById('cpf').focus();
+        return;
+    }
+
     btn.innerHTML = "Salvando...";
     btn.disabled = true;
 
-    // Objeto limpo, sem email/telefone
+    // Objeto limpo
     const dados = {
         nome: nome,
         cpf: cpf,
@@ -74,7 +104,7 @@ function salvarDivida() {
         rodeio: rodeio,
         valor: valor,
         observacao: observacao,
-        status: "pendente", // Padrão inicial
+        status: "pendente",
         dataRegistro: firebase.firestore.FieldValue.serverTimestamp()
     };
 

@@ -22,9 +22,35 @@ const auth = firebase.auth();
 })();
 
 // --- 2. UTILITÁRIOS ---
+
 const formatarMoeda = (valor) => {
     return parseFloat(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
+
+// [NOVO] Algoritmo oficial de validação de CPF (Receita Federal)
+function validarCPF(cpf) {
+    cpf = cpf.replace(/[^\d]+/g,''); // Remove pontos e traços
+    if(cpf == '') return false;
+    
+    // Elimina CPFs inválidos conhecidos (111.111.111-11, etc)
+    if (cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+    
+    // Valida 1º dígito verificador
+    let add = 0;
+    for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
+    let rev = 11 - (add % 11);
+    if (rev == 10 || rev == 11) rev = 0;
+    if (rev != parseInt(cpf.charAt(9))) return false;
+    
+    // Valida 2º dígito verificador
+    add = 0;
+    for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
+    rev = 11 - (add % 11);
+    if (rev == 10 || rev == 11) rev = 0;
+    if (rev != parseInt(cpf.charAt(10))) return false;
+    
+    return true;
+}
 
 // --- 3. CONTROLE DE TELA (LOGIN vs CADASTRO) ---
 function toggleAuth(tipo) {
@@ -91,9 +117,41 @@ function fazerLogin() {
         });
 }
 
+// [NOVO] Função de Recuperar Senha
+function recuperarSenha() {
+    const email = document.getElementById('loginEmail').value;
+    const msgErro = document.getElementById('msgErroAuth');
+
+    if(!email) {
+        msgErro.innerHTML = "Digite seu e-mail no campo acima e clique aqui novamente.";
+        msgErro.classList.remove('hidden');
+        // Foca no campo de e-mail para ajudar o usuário
+        document.getElementById('loginEmail').focus();
+        return;
+    }
+
+    if(confirm("Deseja receber um e-mail para redefinir sua senha em: " + email + "?")) {
+        auth.sendPasswordResetEmail(email)
+        .then(() => {
+            alert("E-mail enviado! Verifique sua caixa de entrada (e spam) para criar uma nova senha.");
+            msgErro.classList.add('hidden');
+        })
+        .catch((error) => {
+            console.error(error);
+            if (error.code === 'auth/user-not-found') {
+                msgErro.innerHTML = "E-mail não cadastrado.";
+            } else {
+                msgErro.innerHTML = "Erro ao enviar: " + error.message;
+            }
+            msgErro.classList.remove('hidden');
+        });
+    }
+}
+
 function fazerCadastro() {
     const nome = document.getElementById('cadNome').value;
-    const cpf = document.getElementById('cadCpf').value.replace(/\D/g, '');
+    const cpfCru = document.getElementById('cadCpf').value;
+    const cpf = cpfCru.replace(/\D/g, ''); // Limpa pontos e traços
     const telefone = document.getElementById('cadTelefone').value;
     const email = document.getElementById('cadEmail').value;
     const senha = document.getElementById('cadSenha').value;
@@ -101,6 +159,13 @@ function fazerCadastro() {
 
     if(!email || !senha || !cpf || !nome) {
         msgErro.innerHTML = "Preencha todos os campos!";
+        msgErro.classList.remove('hidden');
+        return;
+    }
+
+    // [NOVO] Validação de CPF antes de criar a conta
+    if(!validarCPF(cpf)) {
+        msgErro.innerHTML = "CPF Inválido! Confira os números.";
         msgErro.classList.remove('hidden');
         return;
     }
@@ -122,7 +187,13 @@ function fazerCadastro() {
     })
     .catch((error) => {
         console.error(error);
-        msgErro.innerHTML = "Erro ao cadastrar: " + error.message;
+        if(error.code === 'auth/email-already-in-use') {
+            msgErro.innerHTML = "Este e-mail já está em uso.";
+        } else if (error.code === 'auth/weak-password') {
+            msgErro.innerHTML = "A senha deve ter pelo menos 6 caracteres.";
+        } else {
+            msgErro.innerHTML = "Erro ao cadastrar: " + error.message;
+        }
         msgErro.classList.remove('hidden');
     });
 }
