@@ -127,6 +127,25 @@ input, select {
     
 }
 
+
+/* Estilo para a descrição do serviço (Gaiteiros/Violeiros) */
+.detalhe-servico {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #444; /* Linha pontilhada separando */
+    font-size: 0.9rem;
+    color: #bbb; /* Cor um pouco mais clara que o texto normal */
+    font-style: italic;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detalhe-servico i {
+    color: var(--gold); /* Ícone dourado */
+    font-size: 0.8rem;
+}
+
 /* Ajuste específico para quando tem ícone */
 .input-group input { padding-left: 45px; }
 

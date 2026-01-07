@@ -60,13 +60,21 @@ function buscarDivida() {
                 let valorNumerico = parseFloat(data.valor);
                 total += valorNumerico;
 
+                // --- NOVA PARTE: Verifica se tem justificativa/observação ---
+                const obsHtml = data.observacao 
+                    ? `<div class="detalhe-servico"><i class="fa-solid fa-circle-info"></i> ${data.observacao}</div>` 
+                    : '';
+
                 html += `
                     <div class="result-item">
                         <div style="font-size: 0.8rem; color: #d4af37;">${data.rodeio}</div>
+                        
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <span>${data.nome} <small style="color:#666">(${data.categoria || '-'})</small></span>
                             <span class="total-value">${formatarMoeda(valorNumerico)}</span>
                         </div>
+
+                        ${obsHtml}
                     </div>
                 `;
             });
